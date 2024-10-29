@@ -127,3 +127,24 @@
     )
 )
 
+;; Read-only functions
+
+;; Get DID details
+(define-read-only (get-did-info (did (string-ascii 100)))
+    (map-get? dids {did: did})
+)
+
+;; Get claim details
+(define-read-only (get-claim (did (string-ascii 100)) (claim-id uint))
+    (map-get? verification-claims {did: did, claim-id: claim-id})
+)
+
+;; Verify if a claim is valid
+(define-read-only (is-claim-valid (did (string-ascii 100)) (claim-id uint))
+    (let ((claim (unwrap! (map-get? verification-claims {did: did, claim-id: claim-id}) false)))
+        (and
+            (not (get revoked claim))
+            (>= (get expires-at claim) block-height)
+        )
+    )
+)
