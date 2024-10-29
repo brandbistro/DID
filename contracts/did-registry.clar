@@ -78,3 +78,33 @@
         )
     )
 )
+
+;; Add a verification claim
+(define-public (add-claim
+    (did (string-ascii 100))
+    (claim-type (string-ascii 50))
+    (data (string-ascii 256))
+    (expires-at uint)
+)
+    (let (
+        (caller tx-sender)
+        (current-claim-id (var-get claim-id-counter))
+    )
+        (var-set claim-id-counter (+ current-claim-id u1))
+        (map-set verification-claims
+            {
+                did: did,
+                claim-id: current-claim-id
+            }
+            {
+                claim-type: claim-type,
+                issuer: caller,
+                issued-at: block-height,
+                expires-at: expires-at,
+                data: data,
+                revoked: false
+            }
+        )
+        (ok current-claim-id)
+    )
+)
