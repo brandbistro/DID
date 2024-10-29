@@ -108,3 +108,22 @@
         (ok current-claim-id)
     )
 )
+
+;; Revoke a verification claim
+(define-public (revoke-claim (did (string-ascii 100)) (claim-id uint))
+    (let (
+        (claim (unwrap! (map-get? verification-claims {did: did, claim-id: claim-id}) ERR-INVALID-CLAIM))
+    )
+        (if (is-eq tx-sender (get issuer claim))
+            (begin
+                (map-set verification-claims
+                    {did: did, claim-id: claim-id}
+                    (merge claim {revoked: true})
+                )
+                (ok true)
+            )
+            ERR-NOT-AUTHORIZED
+        )
+    )
+)
+
