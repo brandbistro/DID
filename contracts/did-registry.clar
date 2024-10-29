@@ -1,30 +1,58 @@
+;; did-registry.clar
+;; Main registry contract for DIDs
 
-;; title: did-registry
-;; version:
-;; summary:
-;; description:
+(define-constant ERR-NOT-AUTHORIZED (err u100))
+(define-constant ERR-DID-EXISTS (err u101))
+(define-constant ERR-DID-NOT-FOUND (err u102))
+(define-constant ERR-INVALID-CLAIM (err u103))
 
-;; traits
-;;
+;; Data structure for storing DIDs
+(define-map dids
+    { did: (string-ascii 100) }
+    {
+        owner: principal,
+        created-at: uint,
+        updated-at: uint,
+        active: bool
+    }
+)
 
-;; token definitions
-;;
+;; Data structure for verification claims
+(define-map verification-claims
+    {
+        did: (string-ascii 100),
+        claim-id: uint
+    }
+    {
+        claim-type: (string-ascii 50),
+        issuer: principal,
+        issued-at: uint,
+        expires-at: uint,
+        data: (string-ascii 256),
+        revoked: bool
+    }
+)
 
-;; constants
-;;
+;; Counter for claim IDs
+(define-data-var claim-id-counter uint u0)
 
-;; data vars
-;;
-
-;; data maps
-;;
-
-;; public functions
-;;
-
-;; read only functions
-;;
-
-;; private functions
-;;
-
+;; Register a new DID
+(define-public (register-did (did (string-ascii 100)))
+    (let ((caller tx-sender))
+        (if (is-none (map-get? dids {did: did}))
+            (begin
+                (map-set dids
+                    {did: did}
+                    {
+                        owner: caller,
+                        created-at: block-height,
+                        updated-at: block-height,
+                        active: true
+                    }
+                )
+                (ok true)
+            )
+            ERR-DID-EXISTS
+        )
+    )
+)
