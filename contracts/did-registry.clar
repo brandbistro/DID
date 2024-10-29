@@ -56,3 +56,25 @@
         )
     )
 )
+
+
+;; Update DID ownership
+(define-public (transfer-did (did (string-ascii 100)) (new-owner principal))
+    (let ((did-data (unwrap! (map-get? dids {did: did}) ERR-DID-NOT-FOUND)))
+        (if (is-eq tx-sender (get owner did-data))
+            (begin
+                (map-set dids
+                    {did: did}
+                    {
+                        owner: new-owner,
+                        created-at: (get created-at did-data),
+                        updated-at: block-height,
+                        active: true
+                    }
+                )
+                (ok true)
+            )
+            ERR-NOT-AUTHORIZED
+        )
+    )
+)
